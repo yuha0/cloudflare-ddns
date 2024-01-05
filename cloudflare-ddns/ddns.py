@@ -24,7 +24,7 @@ from functools import partial
 from leaderelection import LeaderElectionClient
 from cloudflare import CloudflareClient
 
-from prometheus_client import start_http_server
+from prometheus_client import start_http_server, Gauge
 
 
 def ddns(cf_client, subdomains, interval):
