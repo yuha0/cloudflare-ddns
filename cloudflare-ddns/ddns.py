@@ -24,10 +24,15 @@ from functools import partial
 from leaderelection import LeaderElectionClient
 from cloudflare import CloudflareClient
 
+from prometheus_client import start_http_server
+
 
 def ddns(cf_client, subdomains, interval):
+    start_http_server()
+    ip_status = Gauge("ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"])
+    cf_client.set_metrics(ip_status)
     while True:
-        cf_client.reconcile_all(subdomains)
+        cf_client.reconcile_all(subdomains, metrics=ip_status)
         time.sleep(interval)
 
 

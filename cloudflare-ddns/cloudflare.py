@@ -3,6 +3,8 @@ import logging
 import requests
 from itertools import compress
 
+from prometheus_client import Gauge
+
 
 class CloudflareClient:
     API_BASE = "https://api.cloudflare.com/client/v4/zones"
@@ -22,6 +24,11 @@ class CloudflareClient:
         self.auth_header = self._auth_header(authentication)
         self.base_domain = self._get_base_domain()
         self.ips = {"ipv4": None, "ipv6": None}
+        self.expired_ts = set()
+        self.metrics = None
+
+    def set_metrics(self, metrics):
+        self.metrics = metrics
 
     def _auth_header(self, authentication):
         try:
@@ -119,6 +126,8 @@ class CloudflareClient:
                 "Adding new %s record for %s", desired["type"], desired["name"]
             )
             self.update_record(desired)
+            if self.metrics and desired["type"] in {"A", "AAAA"}:
+                self.metrics.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
             return
 
         assert (
@@ -138,9 +147,19 @@ class CloudflareClient:
         else:
             logging.info("Updating record: '%s' -> '%s'", actual, desired)
             self.update_record(desired, actual["id"])
+            if self.metrics:
+                if desired["type"] in {"A", "AAAA"}:
+                    self.metrics.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
+                if actual["type"] in {"A", "AAAA"}:
+                    self.metrics.labels(actual["type"], actual["content"], str(actual["proxied"]).lower()).set(0)
+                    self.expired_ts.add((actual["type"], actual["content"], str(actual["proxied"]))
+
 
     def reconcile_all(self, subdomains=[""]):
         logging.info("Start record reconciliation")
+        if self.metrics:
+            for l in self.expired_ts:
+                self.metrics.remove(list(l))
 
         self.refresh_ips()
 
