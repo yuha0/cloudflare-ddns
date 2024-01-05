@@ -37,7 +37,7 @@ def on_start_leading(proc, cf_client, subdomains, interval):
 
 
 def on_stop_leading(proc):
-    proc.terminuate()
+    proc.terminate()
 
 
 def get_client_id():
