@@ -24,7 +24,9 @@ class LeaderElectionClient:
         except config.config_exception.ConfigException:
             self.incluster = False
             config.load_kube_config(config_file=kubeconfig)
-        lock_ns = lock_ns if lock_ns else self._get_namespace()
+        self.kclient = client.CoreV1Api()
+        self.ns = self._get_namespace()
+        lock_ns = lock_ns if lock_ns else self.ns
         logging.info("Set election namespace to '%s'", lock_ns)
         logging.info("Set election lock to ConfigMap '%s'", lock_name)
         self.candidate_id = candidate_id
@@ -33,8 +35,8 @@ class LeaderElectionClient:
             lease_duration,
             renew_deadline,
             retry_period=5,
-            onstarted_leading=self._logged_callback(isleader=True, cb=onstart),
-            onstopped_leading=self._logged_callback(isleader=False, cb=onstop),
+            onstarted_leading=self._prepare_callback(isleader=True, cb=onstart),
+            onstopped_leading=self._prepare_callback(isleader=False, cb=onstop),
         )
         self.election = leaderelection.LeaderElection(election_config)
 
@@ -46,9 +48,17 @@ class LeaderElectionClient:
             namespace = config.list_kube_config_contexts()[1]["context"]["namespace"]
         return namespace
 
-    def _logged_callback(self, isleader, cb):
+    def _prepare_callback(self, isleader, cb):
         def wrapper():
             logging.info("I am %s", "the leader" if isleader else "a follower")
+            patches = [
+                {
+                    "op": "replace",
+                    "path": "/metadata/labels/primary",
+                    "value": str(isleader).lower()
+                }
+            ]
+            self.kclient.patch_namespaced_pod(self.candidate_id, self.ns, body=patches)
             cb()
 
         return wrapper
