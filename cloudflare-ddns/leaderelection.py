@@ -48,7 +48,7 @@ class LeaderElectionClient:
 
     def _logged_callback(self, isleader, cb):
         def wrapper():
-            logging.info("I am %s leader", "the" if isleader else "no longer the")
+            logging.info("I am %s", "the leader" if isleader else "a follower")
             cb()
 
         return wrapper
