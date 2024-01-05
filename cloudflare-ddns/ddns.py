@@ -32,7 +32,7 @@ def ddns(cf_client, subdomains, interval):
     ip_status = Gauge("ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"])
     cf_client.set_metrics(ip_status)
     while True:
-        cf_client.reconcile_all(subdomains, metrics=ip_status)
+        cf_client.reconcile_all(subdomains)
         time.sleep(interval)
 
 
