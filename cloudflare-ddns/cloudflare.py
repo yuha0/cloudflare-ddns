@@ -152,8 +152,7 @@ class CloudflareClient:
                     self.metrics.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
                 if actual["type"] in {"A", "AAAA"}:
                     self.metrics.labels(actual["type"], actual["content"], str(actual["proxied"]).lower()).set(0)
-                    self.expired_ts.add((actual["type"], actual["content"], str(actual["proxied"]))
-
+                    self.expired_ts.add((actual["type"], actual["content"], str(actual["proxied"]).lower()))
 
     def reconcile_all(self, subdomains=[""]):
         logging.info("Start record reconciliation")
