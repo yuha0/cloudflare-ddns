@@ -144,6 +144,9 @@ class CloudflareClient:
             logging.info(
                 "The %s record for %s is up to date", actual["type"], actual["name"]
             )
+            if self.metrics:
+                if desired["type"] in {"A", "AAAA"}:
+                    self.metrics.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
         else:
             logging.info("Updating record: '%s' -> '%s'", actual, desired)
             self.update_record(desired, actual["id"])
