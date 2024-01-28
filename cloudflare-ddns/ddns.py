@@ -17,7 +17,6 @@ import json
 import requests
 import uuid
 import time
-from multiprocessing import Process
 from datetime import datetime
 from functools import partial
 
@@ -27,22 +26,10 @@ from cloudflare import CloudflareClient
 from prometheus_client import start_http_server, Gauge
 
 
-def ddns(cf_client, subdomains, interval):
-    start_http_server(2157)
-    ip_status = Gauge("ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"])
-    cf_client.set_metrics(ip_status)
+def on_start_leading(cf_client, subdomains, interval):
     while True:
         cf_client.reconcile_all(subdomains)
         time.sleep(interval)
-
-
-def on_start_leading(proc, cf_client, subdomains, interval):
-    proc = Process(target=ddns, args=(cf_client, subdomains, interval))
-    proc.start()
-
-
-def on_stop_leading(proc):
-    proc.terminate()
 
 
 def get_client_id():
@@ -160,9 +147,9 @@ if __name__ == "__main__":
     cf_client = CloudflareClient(**cf_config)
 
     ddns_proc = None
-    onstart_cb = partial(on_start_leading, proc=ddns_proc, cf_client=cf_client, subdomains=config['subdomains'], interval=config['interval'])
-    onstop_cb = partial(on_stop_leading, proc=ddns_proc)
+    onstart_cb = partial(on_start_leading, cf_client=cf_client, subdomains=config['subdomains'], interval=config['interval'])
+    le_client = LeaderElectionClient(onstart=onstart_cb, onstop=lambda *args, **kwargs: None, **le_config)
 
-    le_client = LeaderElectionClient(onstart=onstart_cb, onstop=onstop_cb, **le_config)
+    start_http_server(2157)
 
     le_client.run()
