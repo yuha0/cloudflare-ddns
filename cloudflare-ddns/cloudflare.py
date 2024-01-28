@@ -1,9 +1,8 @@
-import time
 import logging
 import requests
 from itertools import compress
 
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import Gauge
 
 IP_STATUS = Gauge("ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"])
 
@@ -27,7 +26,6 @@ class CloudflareClient:
         self.base_domain = self._get_base_domain()
         self.ips = {"ipv4": None, "ipv6": None}
         self.expired_ts = set()
-        start_http_server(2157)
 
 
     def _auth_header(self, authentication):
