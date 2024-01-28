@@ -53,7 +53,7 @@ class LeaderElectionClient:
                 {
                     "op": "replace",
                     "path": "/metadata/labels/primary",
-                    "value": str(isleader).lower()
+                    "value": str(isleader).lower(),
                 }
             ]
             self.kclient.patch_namespaced_pod(self.candidate_id, self.ns, body=patches)

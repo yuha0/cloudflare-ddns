@@ -4,7 +4,9 @@ from itertools import compress
 
 from prometheus_client import Gauge
 
-IP_STATUS = Gauge("ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"])
+IP_STATUS = Gauge(
+    "ddns_ip_status", "status of detected IP address", ["type", "ip", "proxied"]
+)
 
 
 class CloudflareClient:
@@ -26,7 +28,6 @@ class CloudflareClient:
         self.base_domain = self._get_base_domain()
         self.ips = {"ipv4": None, "ipv6": None}
         self.expired_ts = set()
-
 
     def _auth_header(self, authentication):
         try:
@@ -115,8 +116,16 @@ class CloudflareClient:
             )
 
     def delete_record(self, record):
-        logging.warning("Deleting %s record %s: %s", record['type'], record['name'], record['content'])
-        requests.delete(f"{self.API_BASE}/{self.zone_id}/dns_records/{record['id']}", headers=self.auth_header)
+        logging.warning(
+            "Deleting %s record %s: %s",
+            record["type"],
+            record["name"],
+            record["content"],
+        )
+        requests.delete(
+            f"{self.API_BASE}/{self.zone_id}/dns_records/{record['id']}",
+            headers=self.auth_header,
+        )
 
     def reconcile_record(self, desired, actual):
         if not actual:
@@ -125,7 +134,9 @@ class CloudflareClient:
             )
             self.update_record(desired)
             if desired["type"] in {"A", "AAAA"}:
-                IP_STATUS.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
+                IP_STATUS.labels(
+                    desired["type"], desired["content"], str(desired["proxied"]).lower()
+                ).set(1)
             return
 
         assert (
@@ -143,15 +154,23 @@ class CloudflareClient:
                 "The %s record for %s is up to date", actual["type"], actual["name"]
             )
             if desired["type"] in {"A", "AAAA"}:
-                IP_STATUS.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
+                IP_STATUS.labels(
+                    desired["type"], desired["content"], str(desired["proxied"]).lower()
+                ).set(1)
         else:
             logging.info("Updating record: '%s' -> '%s'", actual, desired)
             self.update_record(desired, actual["id"])
             if desired["type"] in {"A", "AAAA"}:
-                IP_STATUS.labels(desired["type"], desired["content"], str(desired["proxied"]).lower()).set(1)
+                IP_STATUS.labels(
+                    desired["type"], desired["content"], str(desired["proxied"]).lower()
+                ).set(1)
             if actual["type"] in {"A", "AAAA"}:
-                IP_STATUS.labels(actual["type"], actual["content"], str(actual["proxied"]).lower()).set(0)
-                self.expired_ts.add((actual["type"], actual["content"], str(actual["proxied"]).lower()))
+                IP_STATUS.labels(
+                    actual["type"], actual["content"], str(actual["proxied"]).lower()
+                ).set(0)
+                self.expired_ts.add(
+                    (actual["type"], actual["content"], str(actual["proxied"]).lower())
+                )
 
     def reconcile_all(self, subdomains=[""]):
         logging.info("Start record reconciliation")
