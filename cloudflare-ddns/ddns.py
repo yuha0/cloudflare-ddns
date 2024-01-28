@@ -12,8 +12,6 @@ logging.basicConfig(
         format='%(levelname).1s%(asctime)s %(filename)s:%(lineno)d] %(message)s',
         datefmt='%y%m%d %H:%M:%S')
 import argparse
-import sys
-import json
 import uuid
 import time
 from datetime import datetime
@@ -22,7 +20,7 @@ from functools import partial
 from leaderelection import LeaderElectionClient
 from cloudflare import CloudflareClient
 
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import start_http_server
 
 
 def on_start_leading(cf_client, subdomains, interval):

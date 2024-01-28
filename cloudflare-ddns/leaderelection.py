@@ -1,9 +1,7 @@
-import os
 import logging
 from kubernetes import client, config
-from kubernetes.leaderelection import leaderelection
+from kubernetes.leaderelection import leaderelection, electionconfig
 from kubernetes.leaderelection.resourcelock.configmaplock import ConfigMapLock
-from kubernetes.leaderelection import electionconfig
 
 
 class LeaderElectionClient:
