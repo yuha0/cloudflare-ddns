@@ -49,13 +49,21 @@ class LeaderElectionClient:
     def _prepare_callback(self, isleader, cb):
         def wrapper():
             logging.info("I am %s", "the leader" if isleader else "a follower")
-            patches = [
-                {
-                    "op": "replace",
-                    "path": "/metadata/labels/primary",
-                    "value": str(isleader).lower(),
-                }
-            ]
+            if isleader:
+                patches = [
+                    {
+                        "op": "replace",
+                        "path": "/metadata/labels/primary",
+                        "value": "true",
+                    }
+                ]
+            else:
+                patches = [
+                    {
+                        "op": "remove",
+                        "path": "/metadata/labels/primary",
+                    }
+                ]
             self.kclient.patch_namespaced_pod(self.candidate_id, self.ns, body=patches)
             cb()
 
