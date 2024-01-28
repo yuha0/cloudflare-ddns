@@ -14,7 +14,6 @@ logging.basicConfig(
 import argparse
 import sys
 import json
-import requests
 import uuid
 import time
 from datetime import datetime
