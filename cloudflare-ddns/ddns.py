@@ -1,16 +1,18 @@
 import os
 import logging
+
 LOG_LEVELS = {
-        'debug': logging.DEBUG,
-        'info': logging.INFO,
-        'warning': logging.WARNING,
-        'error': logging.ERROR,
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
 }
 
 logging.basicConfig(
-        level=LOG_LEVELS[os.environ.get('APP_LOGLEVEL', 'info')],
-        format='%(levelname).1s%(asctime)s %(filename)s:%(lineno)d] %(message)s',
-        datefmt='%y%m%d %H:%M:%S')
+    level=LOG_LEVELS[os.environ.get("APP_LOGLEVEL", "info")],
+    format="%(levelname).1s%(asctime)s %(filename)s:%(lineno)d] %(message)s",
+    datefmt="%y%m%d %H:%M:%S",
+)
 import argparse
 import uuid
 import time
@@ -70,7 +72,9 @@ def get_config():
     parser.add_argument(
         "--ipv6", action="store_true", help="Attempt to detect ipv6 public IP"
     )
-    parser.add_argument("--purge", action="store_true", help="Attempt to delete stale records.")
+    parser.add_argument(
+        "--purge", action="store_true", help="Attempt to delete stale records."
+    )
     parser.add_argument(
         "--election-lock-name",
         type=str,
@@ -112,7 +116,9 @@ def process_config(config):
         config["election_lease_duration"] > config["election_renew_deadline"]
     ), "election-lease-duration needs to be greater than election-renew-deadline, so that renews happen before expiration"
     assert config["ipv4"] or config["ipv6"], "one of ipv4 and ipv6 has to be enabled"
-    assert config['api_token'] or (config['api_key'] and config['api_email']), "Failed to detect cloud flare API credentials from environment variables"
+    assert config["api_token"] or (
+        config["api_key"] and config["api_email"]
+    ), "Failed to detect cloud flare API credentials from environment variables"
 
     client_id = get_client_id()
     cf_config = {
@@ -144,8 +150,15 @@ if __name__ == "__main__":
     cf_client = CloudflareClient(**cf_config)
 
     ddns_proc = None
-    onstart_cb = partial(on_start_leading, cf_client=cf_client, subdomains=config['subdomains'], interval=config['interval'])
-    le_client = LeaderElectionClient(onstart=onstart_cb, onstop=lambda *args, **kwargs: None, **le_config)
+    onstart_cb = partial(
+        on_start_leading,
+        cf_client=cf_client,
+        subdomains=config["subdomains"],
+        interval=config["interval"],
+    )
+    le_client = LeaderElectionClient(
+        onstart=onstart_cb, onstop=lambda *args, **kwargs: None, **le_config
+    )
 
     start_http_server(2157)
 
