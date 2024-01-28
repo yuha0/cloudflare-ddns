@@ -13,4 +13,4 @@ env:
 
 jobs:
   docker:
-    uses: yuha0/action-docker-multiarch/.github/workflows/image.yml
+    uses: yuha0/action-docker-multiarch/.github/workflows/image.yml@main
