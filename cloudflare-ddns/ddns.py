@@ -1,4 +1,5 @@
 import os
+import requests
 import logging
 
 LOG_LEVELS = {
@@ -13,6 +14,7 @@ logging.basicConfig(
     format="%(levelname).1s%(asctime)s %(filename)s:%(lineno)d] %(message)s",
     datefmt="%y%m%d %H:%M:%S",
 )
+
 import argparse
 import uuid
 import time
@@ -27,7 +29,10 @@ from prometheus_client import start_http_server
 
 def on_start_leading(cf_client, subdomains, interval):
     while True:
-        cf_client.reconcile_all(subdomains)
+        try:
+            cf_client.reconcile_all(subdomains)
+        except requests.RequestException:
+            logging.exception("Request failed")
         time.sleep(interval)
 
 

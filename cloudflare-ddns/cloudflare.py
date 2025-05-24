@@ -64,6 +64,7 @@ class CloudflareClient:
         logging.info("Refreshing IP addresses")
         for req in compress(self.TRACE.keys(), [self.ipv4, self.ipv6]):
             r = requests.get(self.TRACE[req]).text.split("\n")
+            r.raise_for_status()
             ip = dict(l.split("=") for l in r[:-1])["ip"]
             if self.ips[req] != ip:
                 logging.info(
