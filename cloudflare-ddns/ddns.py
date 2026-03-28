@@ -114,16 +114,14 @@ def get_config():
 
 
 def process_config(config):
-    assert (
-        config["interval"] > config["election_renew_deadline"]
-    ), "DDNS update interval needs to be greater than election-renew-deadline to prevent stale leader from hitting cloudflare API"
-    assert (
-        config["election_lease_duration"] > config["election_renew_deadline"]
-    ), "election-lease-duration needs to be greater than election-renew-deadline, so that renews happen before expiration"
-    assert config["ipv4"] or config["ipv6"], "one of ipv4 and ipv6 has to be enabled"
-    assert config["api_token"] or (
-        config["api_key"] and config["api_email"]
-    ), "Failed to detect cloud flare API credentials from environment variables"
+    if not config["interval"] > config["election_renew_deadline"]:
+        raise ValueError("DDNS update interval needs to be greater than election-renew-deadline to prevent stale leader from hitting cloudflare API")
+    if not config["election_lease_duration"] > config["election_renew_deadline"]:
+        raise ValueError("election-lease-duration needs to be greater than election-renew-deadline, so that renews happen before expiration")
+    if not (config["ipv4"] or config["ipv6"]):
+        raise ValueError("one of ipv4 and ipv6 has to be enabled")
+    if not (config["api_token"] or (config["api_key"] and config["api_email"])):
+        raise ValueError("Failed to detect Cloudflare API credentials from environment variables")
 
     client_id = get_client_id()
     cf_config = {

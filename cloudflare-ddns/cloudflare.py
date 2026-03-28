@@ -41,20 +41,24 @@ class CloudflareClient:
         return header
 
     def _get_base_domain(self):
-        return requests.get(
+        r = requests.get(
             f"{self.API_BASE}/{self.zone_id}", headers=self.auth_header
-        ).json()["result"]["name"]
+        )
+        r.raise_for_status()
+        return r.json()["result"]["name"]
 
     def _get_records(self, rtype):
         params = {
             "per_page": 100,
             "type": rtype,
         }
-        return requests.get(
+        r = requests.get(
             f"{self.API_BASE}/{self.zone_id}/dns_records",
             headers=self.auth_header,
             params=params,
-        ).json()["result"]
+        )
+        r.raise_for_status()
+        return r.json()["result"]
 
     def _get_subdomain(self, fqdn):
         if fqdn.endswith(self.base_domain):
@@ -104,18 +108,19 @@ class CloudflareClient:
     def update_record(self, record, rid=""):
         if rid:
             # update existing record
-            requests.put(
+            r = requests.put(
                 f"{self.API_BASE}/{self.zone_id}/dns_records/{rid}",
                 headers=self.auth_header,
                 json=record,
             )
         else:
             # add new record
-            requests.post(
+            r = requests.post(
                 f"{self.API_BASE}/{self.zone_id}/dns_records/",
                 headers=self.auth_header,
                 json=record,
             )
+        r.raise_for_status()
 
     def delete_record(self, record):
         logging.warning(
@@ -124,10 +129,11 @@ class CloudflareClient:
             record["name"],
             record["content"],
         )
-        requests.delete(
+        r = requests.delete(
             f"{self.API_BASE}/{self.zone_id}/dns_records/{record['id']}",
             headers=self.auth_header,
         )
+        r.raise_for_status()
 
     def reconcile_record(self, desired, actual):
         if not actual:
@@ -174,7 +180,9 @@ class CloudflareClient:
                     (actual["type"], actual["content"], str(actual["proxied"]).lower())
                 )
 
-    def reconcile_all(self, subdomains=[""]):
+    def reconcile_all(self, subdomains=None):
+        if subdomains is None:
+            subdomains = [""]
         logging.info("Start record reconciliation")
         for l in self.expired_ts:
             IP_STATUS.remove(list(l))
