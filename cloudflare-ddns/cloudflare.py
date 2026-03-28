@@ -30,9 +30,10 @@ class CloudflareClient:
         self.expired_ts = set()
 
     def _auth_header(self, authentication):
-        try:
-            header = {"Authorization": f"Bearer {authentication['api_token']}"}
-        except KeyError:
+        bearer = authentication.get("api_token")
+        if bearer:
+            header = {"Authorization": f"Bearer {bearer}"}
+        else:
             header = {
                 "X-Auth-Email": authentication["api_email"],
                 "X-Auth-Key": authentication["api_key"],
