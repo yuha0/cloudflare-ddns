@@ -34,8 +34,8 @@ class CloudflareClient:
             header = {"Authorization": f"Bearer {authentication['api_token']}"}
         except KeyError:
             header = {
-                "X-Auth-Email": authentication["api_key"],
-                "X-Auth-Key": authentication["api_email"],
+                "X-Auth-Email": authentication["api_email"],
+                "X-Auth-Key": authentication["api_key"],
             }
         return header
 
