@@ -69,7 +69,7 @@ class CloudflareClient:
             ip = dict(l.split("=") for l in r.text.split("\n")[:-1])["ip"]
             if self.ips[req] != ip:
                 logging.info(
-                    "Updating recorded %s address from %s to %s", req, self.ips[req], ip
+                    "Detected %s address change from %s to %s", req, self.ips[req], ip
                 )
                 self.ips[req] = ip
                 changed = True
@@ -189,6 +189,7 @@ class CloudflareClient:
 
         logging.info("Updating configured domains")
         for fqdn in fqdns:
+            desired_txt = None
             for r in [
                 {"type": "A", "protocol": "ipv4"},
                 {"type": "AAAA", "protocol": "ipv6"},
@@ -202,10 +203,11 @@ class CloudflareClient:
                     if current:
                         del records[rtype][fqdn]
                     desired_txt = self._generate_record_txt(desired)
-            current_txt = records["TXT"].get(fqdn, None)
-            self.reconcile_record(desired_txt, current_txt)
-            if current_txt:
-                del records["TXT"][fqdn]
+            if desired_txt:
+                current_txt = records["TXT"].get(fqdn, None)
+                self.reconcile_record(desired_txt, current_txt)
+                if current_txt:
+                    del records["TXT"][fqdn]
 
         logging.info("Checking out-of-sync records")
         for fqdn in records["TXT"]:
@@ -222,5 +224,6 @@ class CloudflareClient:
                         record["type"],
                         record["name"],
                     )
-                    self.delete_record(record)
+                    if self.purge:
+                        self.delete_record(record)
         logging.info("Finished reconciliation")
