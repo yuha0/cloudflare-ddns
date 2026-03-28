@@ -9,10 +9,6 @@ This project is inspired by [timothymiller/cloudflare-ddns](https://github.com/t
 3. [distroless](https://github.com/GoogleContainerTools/distroless) based image. Fatter than [alpine](https://github.com/timothymiller/cloudflare-ddns/blob/a9d25c743a2341a37e77f79abcbdb9a900528f92/README.md?plain=1#L30), but arguably better in some cases.
 4. [DNS Registry](#dns-registry) for traceability and housekeeping.
 
-## TODO:
-
-- Expose prometheus metrics.
-
 ## DNS Registry
 
 The mission of this project is to watch public IP updates by your ISP and update the public `A`/`AAAA` records accordingly. It should not touch DNS records managed by other systems(unless is explicitly told by users), but at the same time, has the confident to delete records it knowns that itself is the manager. 
@@ -23,7 +19,7 @@ Inspired by [kubernetes-sigs/external-dns](https://github.com/kubernetes-sigs/ex
 "heritage=cloudflare-ddns,cloudflare-ddns/owner=<owner-id>"
 ```
 
-where `<owner-id>` is either the pod's name, or an UUID generaged on start.
+where `<owner-id>` is either the pod's name, or an UUID generated on start.
 
 If you run the script with `--subdomains foo,bar` today, and restart it tomorrow with a different list of subdomains `--subdomains baz`, the `A`, `AAAA`, `TXT` records for `foo` and `bar` will all be deleted.
 
@@ -31,7 +27,7 @@ If you run the script with `--subdomains foo,bar` today, and restart it tomorrow
 
 ### Environment Variables
 
-Cloudflare API credentials need to be available as environemtn variables before start.
+Cloudflare API credentials need to be available as environment variables before start.
 
 - `CF_ZONE_ID`: DNS zone ID. This information is not sensitive, but I thought it's nice to have all Cloudflare information in the same place. This ID is a 32-character random string, so it is not for humans anyways.
 - `CF_API_TOKEN`: Preferred authentication method.
