@@ -2,8 +2,6 @@ name: Build multi-arch container image
 
 on:
   push:
-    branches:
-    - '*'
     tags:
     - 'v*'
 
