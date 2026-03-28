@@ -96,7 +96,7 @@ def get_config():
     parser.add_argument("--election-renew-deadline", type=int, default=10)
     args = vars(parser.parse_args())
 
-    args["subdomains"] = args["subdomains"].strip(",").split()
+    args["subdomains"] = args["subdomains"].strip(",").split(",")
     logging.warning("cli arguments: %s", args)
 
     # env vars
