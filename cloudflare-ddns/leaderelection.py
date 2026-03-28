@@ -46,10 +46,26 @@ class LeaderElectionClient:
             namespace = config.list_kube_config_contexts()[1]["context"]["namespace"]
         return namespace
 
+    def _clear_stale_primary_labels(self):
+        pods = self.kclient.list_namespaced_pod(
+            self.ns, label_selector="primary=true"
+        )
+        remove_patch = [{"op": "remove", "path": "/metadata/labels/primary"}]
+        for pod in pods.items:
+            if pod.metadata.name != str(self.candidate_id):
+                logging.warning(
+                    "Removing stale primary label from pod '%s'",
+                    pod.metadata.name,
+                )
+                self.kclient.patch_namespaced_pod(
+                    pod.metadata.name, self.ns, body=remove_patch
+                )
+
     def _prepare_callback(self, isleader, cb):
         def wrapper():
             logging.info("I am %s", "the leader" if isleader else "a follower")
             if isleader:
+                self._clear_stale_primary_labels()
                 patches = [
                     {
                         "op": "replace",
